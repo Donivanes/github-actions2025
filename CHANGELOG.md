@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.1.0...github-actions-v1.2.0) (2026-02-19)
+
+
+### Features
+
+* new test ([9fe652a](https://github.com/Donivanes/github-actions2025/commit/9fe652a872265a80407547141aebd888f07a6206))
+
 ## [1.1.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.0.0...github-actions-v1.1.0) (2026-02-19)
 
 

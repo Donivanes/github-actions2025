@@ -24,10 +24,6 @@ function App() {
         <p>
           Edit <code>src/App.jsx</code> and save to test HMR
         </p>
-        <p>PRUEBA DE RELEASE</p>
-        <p>PRUEBA DE RELEASE 2</p>
-        <p>PRUEBA DE RELEASE 3</p>
-        <p>PRUEBA DE RELEASE 4</p>
       </div>
       <p className="read-the-docs">
         Click on the Vite and React logos to learn more

@@ -1,0 +1,110 @@
+---
+description: Project architecture, layers, dependency rules, and naming conventions
+alwaysApply: true
+---
+
+# Project Architecture
+
+## Global structure
+
+- Client: `app/_features/<feature>/{domain,application,infrastructure,presentation}`
+- Server: `app/_lib/{services,repositories,infrastructure,utils}`
+- HTTP endpoints (Next.js API): `app/api/v1/**` (they use the `_lib` `services` layer)
+
+Detected client features: `auth`, `company`, `contact`, `document`, `kernel`, `shared`, `user`.
+
+## Client layers (`app/_features`)
+
+Each feature is organized into 4 layers. Keep strict boundaries:
+
+- `domain` (pure): entities, DTOs, enums, errors, validations, and pure domain services. No React, fetch, or infra dependencies.
+- `application`: use cases that orchestrate `domain` + repositories (interfaces) and domain services. Contains no UI.
+- `infrastructure`: concrete adapters (mappers, HTTP/DB repositories, serialization). Does not expose React components.
+- `presentation`: UI (React), forms, hooks, form validations, and `queries/` (react-query). No direct access to `infrastructure`.
+
+Conventions per feature:
+
+- DTOs in `domain/dtos.ts`
+- Entities in `domain/entities.ts`
+- Errors in `domain/errors.ts`
+- Use cases in `application/use-cases.ts`
+- Mappers in `infrastructure/mappers/*-mapper.ts`
+- Repositories (interfaces and impl) in `infrastructure/repositories.ts`
+- React Query queries/mutations in `presentation/queries/**`
+
+Exports: Use `index.ts` of each layer/feature as the public API. Avoid deep imports from outside.
+
+## Server layers (`app/_lib`)
+
+- `services`: server business orchestration. Public contracts in `types.ts` (for DTOs shareable with the client). May depend on `repositories`, `infrastructure`, `utils`.
+- `repositories`: data access (DB, external services) and construction of internal models.
+- `infrastructure`: low-level adapters (DB, logger, storage, verifactu, http client). No business logic.
+- `utils`: pure utilities and cross-cutting helpers.
+
+API routes (`app/api/v1/**`): Must consume the `_lib` `services` layer to resolve backend use cases.
+
+## Dependency rules
+
+Intra-client (`app/_features`):
+
+- `presentation` → `application` (allowed)
+- `application` → `domain` and `infrastructure` (allowed)
+- `presentation` ✗→ `infrastructure` (forbidden)
+- `domain` ✗→ any other layer (forbidden)
+- Across features: prefer public `index.ts`, avoid deep cross-feature imports.
+
+Intra-server (`app/_lib`):
+
+- `services` → `repositories`, `infrastructure`, `utils` (allowed)
+- `repositories` → `infrastructure`, `utils` (allowed)
+- `infrastructure` and `utils` do not depend on `presentation`/React nor on the client.
+
+Between client and server:
+
+- Client → Server: ONLY import public type contracts from `app/_lib/services/**/types.ts`.
+- Server → Client: FORBIDDEN to import from `app/_features/**`.
+- API routes (`app/api/v1/**`) → may use any implementation under `_lib/services/**` and internal server dependencies.
+
+## Valid/invalid imports (client)
+
+```ts
+// ✅ Valid
+import type { CreateDocumentInput, DocumentDTO } from '@/app/_lib/services/documents/types'
+
+// ✗ Invalid
+// import { DocumentsService } from "@/app/_lib/services/documents/documents-service"
+// import { DocumentsRepository } from "@/app/_lib/repositories/documents/documents-repository"
+// import { httpClient } from "@/app/_lib/infrastructure/http-client"
+```
+
+## Where to create new things
+
+Client (`app/_features/<feature>`):
+- New use case: `application/use-cases.ts` (exposed via `application/index.ts`)
+- New entity/DTO/enum: `domain/**`
+- New mapper or client repo: `infrastructure/**`
+- New form, component, or hook: `presentation/**`
+
+Server (`app/_lib`):
+- New business service: `services/<topic>/<topic>-service.ts` + `services/<topic>/types.ts`
+- New repository: `repositories/<resource>/**`
+- New adapter: `infrastructure/<provider|technology>/**`
+- New utilities: `utils/**`
+
+API:
+- New route: `app/api/v1/<...>/route.ts` orchestrating the `services` layer.
+
+## Naming conventions
+
+- Public type files: `app/_lib/services/**/types.ts`
+- Client DTOs: `app/_features/<feature>/domain/dtos.ts`
+- Mappers: `*-mapper.ts`
+- React hooks: `use-*.ts` / `use-*.tsx`
+- Queries/mutations: `presentation/queries/use-*-query.ts` or `use-*-mutation.ts`
+
+## Quality and style
+
+- Keep `domain` free of side effects and external dependencies.
+- `application` orchestrates and does not contain IO details.
+- Reuse existing use cases and mappers before creating new ones.
+- Use `index.ts` as the public surface of each layer/feature.

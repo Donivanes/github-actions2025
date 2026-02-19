@@ -1,1 +1,2 @@
 release-please-config.json merge=ours
+.release-please-manifest.json merge=ours

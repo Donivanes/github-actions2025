@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.4.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.3.0...github-actions-v1.4.0) (2026-02-24)
+## [1.4.0-rc](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.3.0...github-actions-v1.4.0-rc) (2026-02-24)
 
 
 ### Features

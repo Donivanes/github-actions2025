@@ -1,12 +1,19 @@
-# Release-Please GitFlow Setup Guide for Node.js Projects
+# Release-Please Setup Guide for Node.js Projects
 
-Automated releases with pre-releases on staging and full releases on main, using `googleapis/release-please-action@v4`.
+Automated releases on `main` with a staging → main promotion workflow, using `googleapis/release-please-action@v4`.
+
+## Architecture
+
+- **Release-please** runs only on `main` — it opens Release PRs with version bumps and changelogs.
+- **Promote workflow** (`promote.yml`) — manually triggered to create a PR from `staging` → `main`.
+- **Backmerge workflow** (`backmerge.yml`) — automatically merges `main` → `staging` after each release to keep branches in sync.
+- **Staging** accumulates conventional commits without any version management.
 
 ## Prerequisites
 
 - Node.js project with `package.json`
 - Conventional commits enforced (commitlint + husky already configured)
-- GitFlow branching: `main` (production) + `staging` (integration)
+- Two branches: `main` (production) + `staging` (integration)
 - GitHub repository
 
 ## Step 1: Enable GitHub Actions PR permissions
@@ -19,17 +26,7 @@ Go to your repository on GitHub:
 - Check "Allow GitHub Actions to create and approve pull requests"
 - Save
 
-## Step 2: Register the merge=ours git driver
-
-Run this once in your local clone:
-
-```bash
-git config merge.ours.driver true
-```
-
-This enables the `merge=ours` strategy used in `.gitattributes` to prevent merge conflicts on release-managed files.
-
-## Step 3: Create files on `main`
+## Step 2: Create files on `main`
 
 ### `.github/workflows/release.yml`
 
@@ -38,7 +35,7 @@ name: Release
 
 on:
   push:
-    branches: [main, staging]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -52,9 +49,98 @@ jobs:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
-          target-branch: ${{ github.ref_name }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+```
+
+### `.github/workflows/promote.yml`
+
+```yaml
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create promotion PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head staging --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Promotion PR #$EXISTING_PR already exists"
+            exit 0
+          fi
+
+          COMMITS=$(git log main..origin/staging --oneline --no-merges)
+          if [ -z "$COMMITS" ]; then
+            echo "No new commits to promote"
+            exit 0
+          fi
+
+          gh pr create \
+            --base main \
+            --head staging \
+            --title "chore: promote staging to production" \
+            --body "## Promotion: staging → main
+
+          ### Commits included:
+          ${COMMITS}"
+```
+
+### `.github/workflows/backmerge.yml`
+
+```yaml
+name: Backmerge to Staging
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  backmerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+
+      - name: Merge main into staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin main
+          if git merge origin/main --no-edit; then
+            git push origin staging
+            echo "Backmerge successful"
+          else
+            git merge --abort
+            gh pr create \
+              --base staging \
+              --head main \
+              --title "chore: backmerge main into staging" \
+              --body "Auto-backmerge failed due to conflicts. Please resolve manually."
+            echo "::warning::Backmerge had conflicts. Created PR for manual resolution."
+          fi
 ```
 
 ### `release-please-config.json`
@@ -80,85 +166,40 @@ jobs:
 
 Set `"0.0.0"` if this is a new project, or the current version from your `package.json` if the project already has releases.
 
-### `.gitattributes`
-
-```
-release-please-config.json merge=ours
-.release-please-manifest.json merge=ours
-CHANGELOG.md merge=ours
-```
-
-This ensures these three files always keep the target branch's version during merges, preventing conflicts between staging and main.
-
 ### Commit and push
 
 ```bash
-git add .github/workflows/release.yml release-please-config.json .release-please-manifest.json .gitattributes
+git add .github/workflows/ release-please-config.json .release-please-manifest.json
 git commit -m "feat: add release-please automated releases"
 git push origin main
 ```
 
-## Step 4: Set up `staging` branch
-
-```bash
-git checkout -b staging
-```
-
-Modify `release-please-config.json` to enable pre-releases:
-
-```json
-{
-  "packages": {
-    ".": {
-      "release-type": "node",
-      "changelog-path": "CHANGELOG.md",
-      "prerelease": true,
-      "prerelease-type": "rc",
-      "versioning": "prerelease"
-    }
-  }
-}
-```
-
-Commit and push:
-
-```bash
-git add release-please-config.json
-git commit -m "feat: enable pre-release versioning on staging"
-git push -u origin staging
-```
-
 ## How it works
 
-### On staging (pre-releases)
+### Development on staging
 
-1. Push conventional commits (`feat:`, `fix:`, etc.) to staging.
-2. Release-please opens/updates a **Release PR** against staging with a pre-release version (e.g., `v1.2.0-rc.0`).
-3. Merge that Release PR → GitHub **Pre-Release** is created, `CHANGELOG.md` updated, `package.json` version bumped.
+1. Push conventional commits (`feat:`, `fix:`, etc.) to `staging` via feature branches.
+2. Staging accumulates changes — no version bumps or release PRs happen here.
 
-### On main (full releases)
+### Promoting to production
 
-1. Merge staging into main.
-2. Release-please opens/updates a **Release PR** against main with the full version (e.g., `v1.2.0`).
-3. Merge that Release PR → GitHub **Release** is created, `CHANGELOG.md` updated, `package.json` version bumped.
+1. Go to **Actions → Promote to Production → Run workflow**.
+2. The workflow creates a PR from `staging` → `main` listing all included commits.
+3. **Merge the promotion PR using "Create a merge commit"** (not squash). This preserves the individual conventional commits so release-please can read them.
+4. Release-please detects the new commits on `main` and opens a **Release PR** with the version bump and changelog.
+5. Merge the Release PR → GitHub Release is created.
+
+### Automatic backmerge
+
+After a release is published, the backmerge workflow automatically merges `main` → `staging` to keep version files in sync. If there are conflicts, it creates a PR for manual resolution.
 
 ### Manual trigger
 
-You can also trigger a release manually via the GitHub Actions UI: **Actions → Release → Run workflow**.
+You can also trigger a release-please run manually: **Actions → Release → Run workflow**.
 
-## Handling merge conflicts (staging → main)
+## Important: Merge strategy for promotion PRs
 
-### Auto-resolved files (via `.gitattributes` merge=ours)
-
-These files keep main's version automatically — no action needed:
-
-- `release-please-config.json`
-- `.release-please-manifest.json`
-- `CHANGELOG.md`
-
-### `package.json` (manual resolution)
-
-The `version` field will conflict because release-please bumps it independently on each branch. When this happens, **always keep main's version**. Release-please on main will bump it correctly in the next release PR.
+When merging promotion PRs (staging → main), **always use "Create a merge commit"**. Do not use squash merge. Release-please needs to see the individual conventional commits to determine the correct version bump and generate the changelog.
 
 ## Troubleshooting
 
@@ -166,20 +207,21 @@ The `version` field will conflict because release-please bumps it independently 
 
 You missed Step 1. Go to Settings → Actions → General → enable "Allow GitHub Actions to create and approve pull requests".
 
+### Release PR not appearing after promotion
+
+- Ensure commits follow conventional commit format (`feat:`, `fix:`, etc.). Non-conventional commits are ignored by release-please.
+- Verify the promotion PR was merged with "Create a merge commit", not squash.
+- Check that the Release workflow triggered: Actions tab → Release workflow.
+
+### Backmerge conflicts
+
+If the automatic backmerge fails, a PR is created from `main` → `staging`. Resolve conflicts manually and merge.
+
 ### "Validation Failed: tag_name already_exists"
 
-A tag from a previous release system or from staging conflicts with what main is trying to create. Fix:
+A tag from a previous release conflicts. Fix:
 
 ```bash
 gh release delete <tag-name> --yes --cleanup-tag
 gh workflow run release.yml --ref main
 ```
-
-### Release PR not appearing
-
-- Ensure commits follow conventional commit format (`feat:`, `fix:`, etc.). Non-conventional commits like `update stuff` are ignored by release-please.
-- Check that the workflow triggered: Actions tab → Release workflow.
-
-### merge=ours not working
-
-You need to register the driver locally. Run `git config merge.ours.driver true` in your clone. Each developer who merges staging → main needs to run this once.

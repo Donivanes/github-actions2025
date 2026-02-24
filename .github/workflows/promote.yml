@@ -1,0 +1,44 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create promotion PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING_PR=$(gh pr list --base main --head staging --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Promotion PR #$EXISTING_PR already exists"
+            exit 0
+          fi
+
+          COMMITS=$(git log main..origin/staging --oneline --no-merges)
+          if [ -z "$COMMITS" ]; then
+            echo "No new commits to promote"
+            exit 0
+          fi
+
+          gh pr create \
+            --base main \
+            --head staging \
+            --title "chore: promote staging to production" \
+            --body "$(cat <<EOF
+          ## Promotion: staging → main
+
+          ### Commits included:
+          ${COMMITS}
+          EOF
+          )"

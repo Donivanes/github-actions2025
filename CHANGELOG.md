@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.5.0...github-actions-v1.5.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* move backmerge into release workflow to work with GITHUB_TOKEN ([ae44e7d](https://github.com/Donivanes/github-actions2025/commit/ae44e7d95ed81d0fa7bba5654ce250735b76fdfb))
+
 ## [1.5.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.4.0...github-actions-v1.5.0) (2026-02-24)
 
 

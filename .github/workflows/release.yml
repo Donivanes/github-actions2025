@@ -12,9 +12,42 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  backmerge:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+
+      - name: Merge main into staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin main
+          if git merge origin/main --no-edit; then
+            git push origin staging
+            echo "Backmerge successful"
+          else
+            git merge --abort
+            gh pr create \
+              --base staging \
+              --head main \
+              --title "chore: backmerge main into staging" \
+              --body "Auto-backmerge failed due to conflicts. Please resolve manually."
+            echo "::warning::Backmerge had conflicts. Created PR for manual resolution."
+          fi

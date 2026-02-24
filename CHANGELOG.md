@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.1](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.2.0...github-actions-v1.2.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* gh actions test ([e9511ce](https://github.com/Donivanes/github-actions2025/commit/e9511cecd544ad661df5801b5b5552dd8797ff4b))
+* gh actions test 2 ([b68ed80](https://github.com/Donivanes/github-actions2025/commit/b68ed803a229936ae18a90e6fbda9f883dbd983b))
+* gitattributes ([d187224](https://github.com/Donivanes/github-actions2025/commit/d187224d4bc8f6cf067b94dbc90f1c3120ef278c))
+* gitattributes file ([1beb8fa](https://github.com/Donivanes/github-actions2025/commit/1beb8fa9c3f9f4db63ba5ae479f26f1a26b1cb08))
+* merge issues ([d5306f6](https://github.com/Donivanes/github-actions2025/commit/d5306f64ee462a393da582f3e1aa58e34d8f42b9))
+
 ## [1.2.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.1.0...github-actions-v1.2.0) (2026-02-19)
 
 

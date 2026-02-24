@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.2.1...github-actions-v1.3.0) (2026-02-24)
+
+
+### Features
+
+* attributes ([fa0e0c1](https://github.com/Donivanes/github-actions2025/commit/fa0e0c1d7897250001e7c32c5c526744cb928e4b))
+* cooking code ([94bda2c](https://github.com/Donivanes/github-actions2025/commit/94bda2c36d733973c6840e5103e7f2245daaf1bc))
+
+
+### Bug Fixes
+
+* gitattributes ([d187224](https://github.com/Donivanes/github-actions2025/commit/d187224d4bc8f6cf067b94dbc90f1c3120ef278c))
+* gitattributes file ([1beb8fa](https://github.com/Donivanes/github-actions2025/commit/1beb8fa9c3f9f4db63ba5ae479f26f1a26b1cb08))
+* go ([4504577](https://github.com/Donivanes/github-actions2025/commit/4504577ec50b331f58c4f046b339d7f79728cd52))
+* perro sanxe ([ab0a337](https://github.com/Donivanes/github-actions2025/commit/ab0a337503aae2246383ff4ba02140eff8f1fd36))
+
 ## [1.2.1](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.2.0...github-actions-v1.2.1) (2026-02-24)
 
 

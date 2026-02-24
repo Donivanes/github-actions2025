@@ -1,2 +1,3 @@
+package.json merge=ours
 release-please-config.json merge=ours
 CHANGELOG.md merge=ours

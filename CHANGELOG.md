@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.0-rc.1](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.4.0-rc...github-actions-v1.4.0-rc.1) (2026-02-24)
+
+
+### Features
+
+* test flow ([93314e6](https://github.com/Donivanes/github-actions2025/commit/93314e6cd4db6b6ae5a8b6640e1fe795995840a5))
+* test flow a ([9236f19](https://github.com/Donivanes/github-actions2025/commit/9236f191c0c1197d355eef9705996330b7411906))
+
 ## [1.4.0-rc](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.3.0...github-actions-v1.4.0-rc) (2026-02-24)
 
 

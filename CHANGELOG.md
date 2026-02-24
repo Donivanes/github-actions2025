@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.3.0...github-actions-v1.4.0) (2026-02-24)
+
+
+### Features
+
+* a  new config file ([64f13a3](https://github.com/Donivanes/github-actions2025/commit/64f13a37fb64198a5e37dd0d6f790fa8ea9291f9))
+
+
+### Bug Fixes
+
+* new config file ([6ce4367](https://github.com/Donivanes/github-actions2025/commit/6ce4367765ecbf28c233bd49fa69cbf292d0db12))
+
 ## [1.3.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.2.1...github-actions-v1.3.0) (2026-02-24)
 
 

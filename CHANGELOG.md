@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.5.1...github-actions-v1.6.0) (2026-02-25)
+
+
+### Features
+
+* google drive integration ([253cb05](https://github.com/Donivanes/github-actions2025/commit/253cb0592181b4c87ca50ad94c5d4cb7fac9cf4f))
+
 ## [1.5.1](https://github.com/Donivanes/github-actions2025/compare/github-actions-v1.5.0...github-actions-v1.5.1) (2026-02-24)
 
 
